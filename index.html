@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Nós dois ♥</title>
+
+    <meta
+        name="description"
+        content="A história de Cauã e Amanda."
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     LOGIN
+====================================================== -->
+
+<section
+    id="loginGate"
+    class="login-screen"
+>
+
+    <div class="login-photo"></div>
+
+    <div class="login-overlay"></div>
+
+
+    <!-- PÁSSAROS -->
+
+    <div class="birds">
+
+        <span class="bird bird-1">⌁</span>
+        <span class="bird bird-2">⌁</span>
+        <span class="bird bird-3">⌁</span>
+        <span class="bird bird-4">⌁</span>
+
+    </div>
+
+
+    <!-- PEQUENOS CORAÇÕES -->
+
+    <div class="floating-heart heart-a">♥</div>
+    <div class="floating-heart heart-b">♥</div>
+    <div class="floating-heart heart-c">♥</div>
+
+
+    <div class="login-content">
+
+
+        <div class="login-brand">
+            nós <span>♥</span>
+        </div>
+
+
+        <p class="login-kicker">
+            para a mulher que mudou minha vida
+        </p>
+
+
+        <div class="login-quote">
+
+            <p id="romanticPhrase">
+                "De todas as histórias que eu poderia viver,
+                escolheria a nossa."
+            </p>
+
+            <span>
+                — para Amanda
+            </span>
+
+        </div>
+
+
+        <div class="login-box">
+
+            <p class="login-small">
+                este lugar guarda um pedaço de nós
+            </p>
+
+
+            <h1>
+                Entre na<br>
+                nossa história.
+            </h1>
+
+
+            <form id="loginForm">
+
+                <div class="field">
+
+                    <label for="username">
+                        Quem está entrando?
+                    </label>
+
+                    <input
+                        id="username"
+                        type="text"
+                        placeholder="Amanda ou Cauã"
+                        autocomplete="username"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="password">
+                        Nossa senha
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Digite a senha"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    class="main-button"
+                    type="submit"
+                >
+
+                    abrir nossa história
+
+                    <span>♥</span>
+
+                </button>
+
+
+                <p
+                    id="loginError"
+                    class="error-message"
+                ></p>
+
+            </form>
+
+
+            <div class="login-date">
+                17.01.2023
+                <span>♥</span>
+                para sempre
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="login-bottom">
+        alguns amores merecem ser guardados
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     QUIZ
+====================================================== -->
+
+<section
+    id="quizGate"
+    class="gate hidden"
+>
+
+    <div class="quiz-card">
+
+        <div class="mini-logo">
+            nós <span>♥</span>
+        </div>
+
+        <p class="eyebrow">
+            antes de entrar...
+        </p>
+
+        <div class="quiz-progress">
+
+            <span id="quizProgress">
+                1 / 10
+            </span>
+
+        </div>
+
+        <p
+            id="quizQuestionNumber"
+            class="quiz-label"
+        >
+            PERGUNTA 01
+        </p>
+
+        <h1 id="quizQuestion">
+            Quem é mais chato(a)? 😏
+        </h1>
+
+        <div
+            id="quizOptions"
+            class="quiz-options"
+        ></div>
+
+        <button
+            id="quizNext"
+            class="main-button"
+            type="button"
+        >
+            Continuar
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     SITE
+====================================================== -->
+
+<main
+    id="mainSite"
+    class="hidden"
+>
+
+
+<!-- =====================================================
+     HEADER
+====================================================== -->
+
+<header class="site-header">
+
+    <div class="header-inner">
+
+        <a
+            href="#inicio"
+            class="brand"
+        >
+            nós <span>♥</span>
+        </a>
+
+
+        <nav>
+
+            <a href="#historia">
+                história
+            </a>
+
+            <a href="#evolucao">
+                evolução
+            </a>
+
+            <a href="#albuns">
+                álbuns
+            </a>
+
+            <a href="#datas">
+                datas
+            </a>
+
+            <a href="#cartas">
+                cartas
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     HERO
+====================================================== -->
+
+<section
+    id="inicio"
+    class="hero"
+>
+
+    <div class="hero-image">
+
+        <img
+            src="assets/foto-principal.jpg"
+            alt="Cauã e Amanda"
+        >
+
+        <div class="hero-image-shade"></div>
+
+        <div class="hero-image-caption">
+            17.01.2023
+        </div>
+
+    </div>
+
+
+    <div class="hero-copy">
+
+        <p class="eyebrow">
+            uma história chamada nós
+        </p>
+
+
+        <h1>
+
+            Algumas histórias
+            <em>
+                acontecem.
+            </em>
+
+            <br>
+
+            A nossa
+            <em>
+                permanece.
+            </em>
+
+        </h1>
+
+
+        <p class="hero-text">
+
+            Entre tantos caminhos,
+            a vida colocou você
+            no meu.
+
+        </p>
+
+
+        <a
+            href="#tempo"
+            class="hero-scroll"
+        >
+
+            <span>
+                continuar
+            </span>
+
+            <b>↓</b>
+
+        </a>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CONTADOR CINEMATOGRÁFICO
+====================================================== -->
+
+<section
+    id="tempo"
+    class="counter-section"
+>
+
+    <div class="counter-background">
+
+        <img
+            src="assets/foto-principal.jpg"
+            alt=""
+        >
+
+    </div>
+
+
+    <div class="counter-dark"></div>
+
+
+    <div class="counter-glass">
+
+        <p class="eyebrow">
+            desde aquele dia
+        </p>
+
+
+        <h2>
+            O tempo passa.
+            <em>Nós continuamos.</em>
+        </h2>
+
+
+        <div
+            id="relationshipCounter"
+            class="relationship-counter"
+        >
+
+            <div class="counter-line">
+
+                <div class="counter-item">
+
+                    <strong id="counterYears">
+                        00
+                    </strong>
+
+                    <span>
+                        anos
+                    </span>
+
+                </div>
+
+
+                <i>:</i>
+
+
+                <div class="counter-item">
+
+                    <strong id="counterMonths">
+                        00
+                    </strong>
+
+                    <span>
+                        meses
+                    </span>
+
+                </div>
+
+
+                <i>:</i>
+
+
+                <div class="counter-item">
+
+                    <strong id="counterDays">
+                        00
+                    </strong>
+
+                    <span>
+                        dias
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="counter-line">
+
+                <div class="counter-item">
+
+                    <strong id="counterHours">
+                        00
+                    </strong>
+
+                    <span>
+                        horas
+                    </span>
+
+                </div>
+
+
+                <i>:</i>
+
+
+                <div class="counter-item">
+
+                    <strong id="counterMinutes">
+                        00
+                    </strong>
+
+                    <span>
+                        minutos
+                    </span>
+
+                </div>
+
+
+                <i>:</i>
+
+
+                <div class="counter-item">
+
+                    <strong id="counterSeconds">
+                        00
+                    </strong>
+
+                    <span>
+                        segundos
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <p class="counter-footer">
+            e ainda é só o começo
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FRASE
+====================================================== -->
+
+<section class="quote-section">
+
+    <div class="quote-decoration">
+        ♥
+    </div>
+
+
+    <p class="eyebrow">
+        para Amanda
+    </p>
+
+
+    <h2>
+        Se eu pudesse voltar
+        <em>ao primeiro dia...</em>
+    </h2>
+
+
+    <p class="quote-final">
+        eu escolheria você novamente.
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     HISTÓRIA
+====================================================== -->
+
+<section
+    id="historia"
+    class="story-section"
+>
+
+    <div class="content-width">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    capítulo 01
+                </p>
+
+                <h2>
+                    Onde tudo começou.
+                </h2>
+
+            </div>
+
+
+            <p>
+                Uma data simples no calendário
+                que acabou mudando tudo.
+            </p>
+
+        </div>
+
+
+        <div class="story-feature">
+
+            <div class="story-photo">
+
+                <img
+                    src="FOTOS/baladas.jpeg"
+                    alt="O começo da nossa história"
+                >
+
+            </div>
+
+
+            <div class="story-copy">
+
+                <span class="story-date">
+                    17 JAN 2023
+                </span>
+
+
+                <h3>
+                    Um dia que parecia
+                    qualquer outro.
+                </h3>
+
+
+                <p>
+                    Até que você apareceu
+                    e fez aquele dia deixar
+                    de ser qualquer coisa.
+                </p>
+
+
+                <p>
+                    Desde então, cada ano,
+                    cada mês, cada dia e
+                    cada segundo passou
+                    a ter outro significado.
+                </p>
+
+
+                <div class="signature">
+                    Cauã <span>&</span> Amanda ♥
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="story-line">
+
+            <div class="story-point">
+
+                <span>
+                    01
+                </span>
+
+                <h3>
+                    O começo
+                </h3>
+
+                <p>
+                    17.01.2023
+                </p>
+
+            </div>
+
+
+            <div class="story-point">
+
+                <span>
+                    02
+                </span>
+
+                <h3>
+                    Tudo que vivemos
+                </h3>
+
+                <p>
+                    risadas, viagens,
+                    brigas, abraços
+                    e reconciliações
+                </p>
+
+            </div>
+
+
+            <div class="story-point">
+
+                <span>
+                    03
+                </span>
+
+                <h3>
+                    Hoje
+                </h3>
+
+                <p>
+                    ainda escolhendo
+                    um ao outro.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     EVOLUÇÃO
+====================================================== -->
+
+<section
+    id="evolucao"
+    class="evolution-section"
+>
+
+    <div class="content-width">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    capítulo 02
+                </p>
+
+                <h2>
+                    Nossa evolução.
+                </h2>
+
+            </div>
+
+
+            <p>
+                Três imagens.
+                Uma história inteira.
+            </p>
+
+        </div>
+
+
+        <div
+            id="evolutionGrid"
+            class="evolution-grid"
+        >
+
+
+            <article
+                class="evolution-card"
+                data-evolution="beginning"
+            >
+
+                <div class="evolution-photo">
+
+                    <div class="evolution-empty">
+
+                        <span>+</span>
+
+                        <p>
+                            adicionar foto
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="evolution-info">
+
+                    <small>
+                        01
+                    </small>
+
+                    <h3>
+                        O começo
+                    </h3>
+
+                    <p>
+                        Onde tudo nasceu.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="text-button"
+                        data-evolution-action="beginning"
+                    >
+                        adicionar foto
+                    </button>
+
+                </div>
+
+            </article>
+
+
+
+            <article
+                class="evolution-card"
+                data-evolution="middle"
+            >
+
+                <div class="evolution-photo">
+
+                    <div class="evolution-empty">
+
+                        <span>+</span>
+
+                        <p>
+                            adicionar foto
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="evolution-info">
+
+                    <small>
+                        02
+                    </small>
+
+                    <h3>
+                        No meio
+                    </h3>
+
+                    <p>
+                        Tudo que construímos.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="text-button"
+                        data-evolution-action="middle"
+                    >
+                        adicionar foto
+                    </button>
+
+                </div>
+
+            </article>
+
+
+
+            <article
+                class="evolution-card"
+                data-evolution="current"
+            >
+
+                <div class="evolution-photo">
+
+                    <div class="evolution-empty">
+
+                        <span>+</span>
+
+                        <p>
+                            adicionar foto
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="evolution-info">
+
+                    <small>
+                        03
+                    </small>
+
+                    <h3>
+                        Atualmente
+                    </h3>
+
+                    <p>
+                        Nós dois, hoje.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="text-button"
+                        data-evolution-action="current"
+                    >
+                        adicionar foto
+                    </button>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     ÁLBUNS
+====================================================== -->
+
+<section
+    id="albuns"
+    class="albums-section"
+>
+
+    <div class="content-width">
+
+
+        <div class="albums-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    capítulo 03
+                </p>
+
+                <h2>
+                    Nossos álbuns.
+                </h2>
+
+                <p class="albums-intro">
+                    Porque algumas lembranças
+                    merecem uma história própria.
+                </p>
+
+            </div>
+
+
+            <button
+                id="createAlbumButton"
+                class="outline-button light"
+            >
+                + criar álbum
+            </button>
+
+        </div>
+
+
+        <div
+            id="albumsView"
+            class="albums-view"
+        ></div>
+
+
+        <div
+            id="albumDetail"
+            class="album-detail hidden"
+        >
+
+            <div class="album-detail-top">
+
+                <button
+                    id="backAlbumsButton"
+                    class="back-button"
+                >
+                    ← voltar aos álbuns
+                </button>
+
+
+                <button
+                    id="addPhotosButton"
+                    class="outline-button light"
+                >
+                    + adicionar fotos
+                </button>
+
+            </div>
+
+
+            <div class="album-detail-heading">
+
+                <div>
+
+                    <p
+                        id="albumDetailCount"
+                        class="eyebrow"
+                    >
+                        0 fotos
+                    </p>
+
+                    <h3 id="albumDetailTitle">
+                        Álbum
+                    </h3>
+
+                    <p id="albumDetailDescription">
+                    </p>
+
+                </div>
+
+
+                <div class="album-detail-actions">
+
+                    <button
+                        id="editAlbumButton"
+                        class="small-light-button"
+                    >
+                        editar
+                    </button>
+
+                    <button
+                        id="deleteAlbumButton"
+                        class="small-light-button danger"
+                    >
+                        excluir álbum
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="albumPhotoGrid"
+                class="album-photo-grid"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FRASE FINAL
+====================================================== -->
+
+<section class="love-banner">
+
+    <div class="love-glow"></div>
+
+
+    <div class="love-banner-content">
+
+        <span class="big-heart">
+            ♥
+        </span>
+
+
+        <p class="eyebrow">
+            e se alguém me perguntasse...
+        </p>
+
+
+        <h2>
+            "Você faria tudo
+            <em>de novo?</em>"
+        </h2>
+
+
+        <p class="love-answer">
+            Faria.
+            <br>
+            Só para encontrar você novamente.
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     DATAS
+====================================================== -->
+
+<section
+    id="datas"
+    class="dates-section"
+>
+
+    <div class="content-width">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    capítulo 04
+                </p>
+
+                <h2>
+                    Datas que importam.
+                </h2>
+
+            </div>
+
+
+            <p>
+                Porque existem dias que
+                merecem nunca ser esquecidos.
+            </p>
+
+        </div>
+
+
+        <div class="dates-layout">
+
+            <div class="date-message">
+
+                <span>
+                    ♥
+                </span>
+
+                <p>
+                    O calendário pode
+                    esquecer.
+                    <em>A gente não.</em>
+                </p>
+
+
+                <button
+                    id="addDateButton"
+                    class="outline-button"
+                >
+                    + adicionar data
+                </button>
+
+            </div>
+
+
+            <div
+                id="datesList"
+                class="dates-list"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CARTAS
+====================================================== -->
+
+<section
+    id="cartas"
+    class="letters-section"
+>
+
+    <div class="content-width">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    capítulo 05
+                </p>
+
+                <h2>
+                    Cartas para nós.
+                </h2>
+
+            </div>
+
+
+            <p>
+                Algumas palavras merecem
+                sobreviver ao tempo.
+            </p>
+
+        </div>
+
+
+        <div class="letters-top">
+
+            <p>
+                Escreva aquilo que você
+                nunca quer esquecer.
+            </p>
+
+
+            <button
+                id="addLetterButton"
+                class="outline-button"
+            >
+                + escrever carta
+            </button>
+
+        </div>
+
+
+        <div
+            id="lettersList"
+            class="letters-list"
+        ></div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FINAL
+====================================================== -->
+
+<section class="final-section">
+
+    <p class="eyebrow">
+        a nossa história continua
+    </p>
+
+
+    <h2>
+        Ainda temos
+        <em>
+            muito para viver.
+        </em>
+    </h2>
+
+
+    <div class="final-heart">
+        ♥
+    </div>
+
+
+    <p class="final-date">
+        Cauã & Amanda
+        <span>·</span>
+        17.01.2023
+        <span>·</span>
+        ∞
+    </p>
+
+</section>
+
+
+
+<footer>
+
+    <div class="footer-logo">
+        nós <span>♥</span>
+    </div>
+
+    <p>
+        Feito para guardar tudo aquilo
+        que o tempo não pode apagar.
+    </p>
+
+</footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     MODAL — EVOLUÇÃO
+====================================================== -->
+
+<div
+    id="evolutionModal"
+    class="modal hidden"
+>
+
+    <div class="modal-bg"></div>
+
+    <div class="modal-card">
+
+        <button
+            id="closeEvolutionModal"
+            class="modal-close"
+        >
+            ×
+        </button>
+
+
+        <p class="eyebrow">
+            nossa evolução
+        </p>
+
+
+        <h2 id="evolutionModalTitle">
+            Adicionar foto
+        </h2>
+
+
+        <form id="evolutionForm">
+
+            <div class="field">
+
+                <label>
+                    Foto
+                </label>
+
+                <input
+                    id="evolutionPhoto"
+                    type="file"
+                    accept="image/*"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Uma pequena frase
+                </label>
+
+                <textarea
+                    id="evolutionDescription"
+                    rows="4"
+                    placeholder="Ex.: O início de tudo..."
+                ></textarea>
+
+            </div>
+
+
+            <button
+                class="main-button"
+                type="submit"
+            >
+                guardar foto ♥
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MODAL — CRIAR/EDITAR ÁLBUM
+====================================================== -->
+
+<div
+    id="albumModal"
+    class="modal hidden"
+>
+
+    <div class="modal-bg"></div>
+
+    <div class="modal-card">
+
+        <button
+            id="closeAlbumModal"
+            class="modal-close"
+        >
+            ×
+        </button>
+
+
+        <p class="eyebrow">
+            nossa memória
+        </p>
+
+
+        <h2 id="albumModalTitle">
+            Criar álbum
+        </h2>
+
+
+        <form id="albumForm">
+
+            <div class="field">
+
+                <label for="albumName">
+                    Nome do álbum
+                </label>
+
+                <input
+                    id="albumName"
+                    type="text"
+                    placeholder="Ex.: Nossa primeira viagem"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="albumDescription">
+                    Descrição
+                </label>
+
+                <textarea
+                    id="albumDescription"
+                    rows="4"
+                    placeholder="Conte um pouco sobre esse álbum..."
+                ></textarea>
+
+            </div>
+
+
+            <div
+                id="albumCoverField"
+                class="field"
+            >
+
+                <label for="albumCover">
+                    Foto de capa
+                </label>
+
+                <input
+                    id="albumCover"
+                    type="file"
+                    accept="image/*"
+                >
+
+            </div>
+
+
+            <button
+                class="main-button"
+                type="submit"
+            >
+                guardar álbum ♥
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MODAL — FOTOS
+====================================================== -->
+
+<div
+    id="photosModal"
+    class="modal hidden"
+>
+
+    <div class="modal-bg"></div>
+
+    <div class="modal-card">
+
+        <button
+            id="closePhotosModal"
+            class="modal-close"
+        >
+            ×
+        </button>
+
+
+        <p class="eyebrow">
+            adicionar lembranças
+        </p>
+
+
+        <h2>
+            Mais fotos para nós.
+        </h2>
+
+
+        <form id="photosForm">
+
+            <div class="upload-zone">
+
+                <input
+                    id="albumPhotos"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    required
+                >
+
+                <div>
+                    <strong>
+                        escolher fotos
+                    </strong>
+
+                    <span>
+                        você pode selecionar várias de uma vez
+                    </span>
+                </div>
+
+            </div>
+
+
+            <button
+                class="main-button"
+                type="submit"
+            >
+                adicionar fotos ♥
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     LIGHTBOX
+====================================================== -->
+
+<div
+    id="lightbox"
+    class="lightbox hidden"
+>
+
+    <button
+        id="closeLightbox"
+        class="lightbox-close"
+    >
+        ×
+    </button>
+
+
+    <button
+        id="lightboxPrev"
+        class="lightbox-arrow left"
+    >
+        ‹
+    </button>
+
+
+    <img
+        id="lightboxImage"
+        src=""
+        alt=""
+    >
+
+
+    <button
+        id="lightboxNext"
+        class="lightbox-arrow right"
+    >
+        ›
+    </button>
+
+
+    <div
+        id="lightboxCounter"
+        class="lightbox-counter"
+    >
+        1 / 1
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     TOAST
+====================================================== -->
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
