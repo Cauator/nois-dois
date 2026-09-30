@@ -142,28 +142,21 @@ const counterSeconds =
 
 /* QUIZ */
 
-const quizProgress =
-    document.getElementById("quizProgress");
-
-const quizQuestionNumber =
-    document.getElementById(
-        "quizQuestionNumber"
-    );
-
-const quizQuestion =
-    document.getElementById(
-        "quizQuestion"
-    );
-
-const quizOptions =
-    document.getElementById(
-        "quizOptions"
-    );
-
-const quizNext =
-    document.getElementById(
-        "quizNext"
-    );
+const quizIntro = document.getElementById("quizIntro");
+const quizGame = document.getElementById("quizGame");
+const quizFinal = document.getElementById("quizFinal");
+const quizStart = document.getElementById("quizStart");
+const quizEnter = document.getElementById("quizEnter");
+const quizProgress = document.getElementById("quizProgress");
+const quizProgressBar = document.getElementById("quizProgressBar");
+const quizQuestionNumber = document.getElementById("quizQuestionNumber");
+const quizQuestion = document.getElementById("quizQuestion");
+const quizSuspense = document.getElementById("quizSuspense");
+const quizOptions = document.getElementById("quizOptions");
+const quizReaction = document.getElementById("quizReaction");
+const quizReactionText = document.getElementById("quizReactionText");
+const quizReactionSubtext = document.getElementById("quizReactionSubtext");
+const quizNext = document.getElementById("quizNext");
 
 
 /* EVOLUÇÃO */
@@ -483,188 +476,244 @@ if (loginForm) {
 
 
 /* =========================================================
-   QUIZ
+   QUIZ — EXPERIÊNCIA DE SUSPENSE
 ========================================================= */
 
 const quizQuestions = [
-
     "Quem é mais chato(a)? 😏",
-
     "Quem reclama mais? 😂",
-
     "Quem briga mais? 😤",
-
     "Quem se esforça mais para dar presentes? 🎁",
-
     "Quem sempre pede desculpas primeiro? 🥹",
-
     "Quem é mais romântico em público? 🥰",
-
     "Quem sente mais saudade? 💭",
-
     "Quem é mais ciumento(a)? 👀",
-
     "Quem faz mais graça? 🤣",
-
     "Quem ama mais o outro? ❤️"
-
 ];
 
+const quizSuspenseMessages = [
+    "Escolha com cuidado... essa resposta fica entre nós. 👀",
+    "Essa já diz um pouco sobre vocês...",
+    "Hmm... interessante. Vamos continuar. 👀",
+    "Essa talvez gere uma pequena discussão... 😂",
+    "Metade do caminho. Continue... ❤️",
+    "Agora começa a ficar difícil...",
+    "Você conhece bem essa história?",
+    "Só mais três... não mude de ideia agora. 👀",
+    "Quase lá...",
+    "A última pode ser a mais importante. ❤️"
+];
+
+const quizReactions = [
+    { title: "Resposta registrada... 👀", text: "Vamos guardar essa." },
+    { title: "Hmm... interessante. 😏", text: "Essa resposta diz bastante coisa." },
+    { title: "Anotado. 😂", text: "Não vamos discutir isso agora..." },
+    { title: "Essa foi corajosa. 👀", text: "Mas ainda temos algumas perguntas." },
+    { title: "Você chegou na metade. ❤️", text: "E ainda tem muita história pela frente." },
+    { title: "Agora ficou sério... 👀", text: "Pense bem nas próximas." },
+    { title: "Você realmente conhece vocês dois. ❤️", text: "Ou será que conhece?" },
+    { title: "Só faltam duas...", text: "Não desista agora." },
+    { title: "Última antes da última... 👀", text: "Essa história está quase sendo aberta." },
+    { title: "Essa resposta fica guardada. ❤️", text: "Agora falta só uma coisa..." }
+];
+
+let currentQuizQuestion = 0;
+let selectedQuizAnswer = null;
 
 function openQuiz() {
-
     loginGate.classList.add("hidden");
-
     mainSite.classList.add("hidden");
-
     quizGate.classList.remove("hidden");
 
     currentQuizQuestion = 0;
-
     selectedQuizAnswer = null;
 
-    renderQuizQuestion();
-
+    if (quizIntro) quizIntro.classList.remove("hidden");
+    if (quizGame) quizGame.classList.add("hidden");
+    if (quizFinal) quizFinal.classList.add("hidden");
+    if (quizReaction) quizReaction.classList.add("hidden");
 }
 
+if (quizStart) {
+    quizStart.addEventListener("click", function () {
+        if (quizIntro) quizIntro.classList.add("hidden");
+        if (quizFinal) quizFinal.classList.add("hidden");
+        if (quizGame) quizGame.classList.remove("hidden");
+
+        currentQuizQuestion = 0;
+        selectedQuizAnswer = null;
+
+        renderQuizQuestion();
+    });
+}
 
 function renderQuizQuestion() {
-
-    const question =
-        quizQuestions[
-            currentQuizQuestion
-        ];
-
-    quizProgress.textContent =
-        `${currentQuizQuestion + 1} / ${quizQuestions.length}`;
-
-    quizQuestionNumber.textContent =
-        `PERGUNTA ${String(
-            currentQuizQuestion + 1
-        ).padStart(2, "0")}`;
-
-    quizQuestion.textContent =
-        question;
-
-    quizNext.textContent =
-        currentQuizQuestion ===
-        quizQuestions.length - 1
-
-            ? "Entrar na nossa história"
-
-            : "Continuar";
+    const index = currentQuizQuestion;
 
     selectedQuizAnswer = null;
 
-    quizOptions.innerHTML = "";
+    if (quizProgress) {
+        quizProgress.textContent =
+            `${index + 1} / ${quizQuestions.length}`;
+    }
 
+    if (quizProgressBar) {
+        quizProgressBar.style.width =
+            `${((index + 1) / quizQuestions.length) * 100}%`;
+    }
 
-    ["Cauã", "Amanda"]
-        .forEach(
-            function (name) {
+    if (quizQuestionNumber) {
+        quizQuestionNumber.textContent =
+            `PERGUNTA ${String(index + 1).padStart(2, "0")}`;
+    }
 
-                const button =
-                    document.createElement(
-                        "button"
-                    );
+    if (quizQuestion) {
+        quizQuestion.textContent = quizQuestions[index];
+    }
 
-                button.type = "button";
+    if (quizSuspense) {
+        quizSuspense.textContent = quizSuspenseMessages[index];
+    }
 
-                button.className =
-                    "quiz-option";
+    if (quizOptions) {
+        quizOptions.innerHTML = "";
+    }
 
-                button.textContent =
-                    name;
+    if (quizReaction) {
+        quizReaction.classList.add("hidden");
+    }
 
+    if (quizNext) {
+        quizNext.disabled = true;
+        quizNext.textContent =
+            index === quizQuestions.length - 1
+                ? "finalizar"
+                : "próxima pergunta →";
+    }
 
-                button.addEventListener(
-                    "click",
-                    function () {
+    ["Cauã", "Amanda"].forEach(function (name) {
+        const button = document.createElement("button");
 
-                        document
-                            .querySelectorAll(
-                                ".quiz-option"
-                            )
-                            .forEach(
-                                item =>
-                                    item.classList
-                                        .remove(
-                                            "selected"
-                                        )
-                            );
+        button.type = "button";
+        button.className = "quiz-option";
 
+        button.innerHTML = `
+            <span class="quiz-option-heart">♡</span>
+            <span>${name}</span>
+        `;
 
-                        button.classList.add(
-                            "selected"
-                        );
+        button.addEventListener("click", function () {
+            selectQuizAnswer(button, name);
+        });
 
-
-                        selectedQuizAnswer =
-                            name;
-
-                    }
-                );
-
-
-                quizOptions.appendChild(
-                    button
-                );
-
-            }
-        );
-
+        quizOptions.appendChild(button);
+    });
 }
 
+function selectQuizAnswer(button, answer) {
+    selectedQuizAnswer = answer;
+
+    document.querySelectorAll(".quiz-option").forEach(function (item) {
+        item.classList.remove("selected");
+        item.disabled = true;
+    });
+
+    button.classList.add("selected");
+
+    showQuizReaction();
+
+    if (quizNext) {
+        quizNext.disabled = false;
+    }
+
+    createQuizHeart(button);
+}
+
+function showQuizReaction() {
+    const reaction = quizReactions[currentQuizQuestion];
+
+    if (!quizReaction || !reaction) {
+        return;
+    }
+
+    if (quizReactionText) {
+        quizReactionText.textContent = reaction.title;
+    }
+
+    if (quizReactionSubtext) {
+        quizReactionSubtext.textContent = reaction.text;
+    }
+
+    quizReaction.classList.remove("hidden");
+    quizReaction.classList.remove("quiz-reaction-pop");
+
+    void quizReaction.offsetWidth;
+
+    quizReaction.classList.add("quiz-reaction-pop");
+}
+
+function createQuizHeart(button) {
+    const heart = document.createElement("span");
+
+    heart.textContent = "♥";
+    heart.className = "quiz-floating-heart";
+
+    const rect = button.getBoundingClientRect();
+
+    heart.style.left =
+        `${rect.left + rect.width / 2}px`;
+
+    heart.style.top =
+        `${rect.top + rect.height / 2}px`;
+
+    document.body.appendChild(heart);
+
+    setTimeout(function () {
+        heart.remove();
+    }, 1200);
+}
 
 if (quizNext) {
-
-    quizNext.addEventListener(
-        "click",
-        function () {
-
-            if (!selectedQuizAnswer) {
-
-                showToast(
-                    "Escolha uma resposta ❤️"
-                );
-
-                return;
-            }
-
-
-            if (
-                currentQuizQuestion <
-                quizQuestions.length - 1
-            ) {
-
-                currentQuizQuestion++;
-
-                renderQuizQuestion();
-
-                return;
-
-            }
-
-
-            localStorage.setItem(
-                "quizCompleted",
-                "true"
-            );
-
-
-            showToast(
-                "Bem-vinda à nossa história ❤️"
-            );
-
-
-            setTimeout(
-                openMainSite,
-                600
-            );
-
+    quizNext.addEventListener("click", function () {
+        if (!selectedQuizAnswer) {
+            showToast("Escolha uma resposta primeiro. ❤️");
+            return;
         }
-    );
 
+        if (currentQuizQuestion < quizQuestions.length - 1) {
+            currentQuizQuestion++;
+            renderQuizQuestion();
+            return;
+        }
+
+        finishQuiz();
+    });
+}
+
+function finishQuiz() {
+    localStorage.setItem("quizCompleted", "true");
+
+    if (quizGame) quizGame.classList.add("hidden");
+    if (quizIntro) quizIntro.classList.add("hidden");
+
+    setTimeout(function () {
+        if (quizFinal) quizFinal.classList.remove("hidden");
+    }, 350);
+}
+
+if (quizEnter) {
+    quizEnter.addEventListener("click", function () {
+        quizEnter.disabled = true;
+        quizEnter.textContent = "abrindo nossa história...";
+
+        setTimeout(function () {
+            openMainSite();
+
+            quizEnter.disabled = false;
+            quizEnter.textContent = "ABRIR NOSSA HISTÓRIA ❤️";
+        }, 700);
+    });
 }
 
 
