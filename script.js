@@ -591,23 +591,89 @@ function renderQuizQuestion() {
                 : "próxima pergunta →";
     }
 
-    ["Cauã", "Amanda"].forEach(function (name) {
-        const button = document.createElement("button");
+    if (index === quizQuestions.length - 1) {
 
-        button.type = "button";
-        button.className = "quiz-option";
+        const sliderWrap = document.createElement("div");
+        sliderWrap.className = "quiz-love-slider";
 
-        button.innerHTML = `
-            <span class="quiz-option-heart">♡</span>
-            <span>${name}</span>
+        sliderWrap.innerHTML = `
+            <div class="quiz-love-value" id="quizLoveValue">50%</div>
+
+            <p class="quiz-love-caption">
+                Arraste até o quanto você ama o Cauã ❤️
+            </p>
+
+            <input
+                id="quizLoveRange"
+                class="quiz-love-range"
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+                step="1"
+                aria-label="Quanto você ama o Cauã"
+            >
+
+            <div class="quiz-love-labels">
+                <span>um pouquinho</span>
+                <span>DEMAIS ❤️</span>
+            </div>
         `;
 
-        button.addEventListener("click", function () {
-            selectQuizAnswer(button, name);
+        quizOptions.appendChild(sliderWrap);
+
+        const slider = sliderWrap.querySelector("#quizLoveRange");
+        const value = sliderWrap.querySelector("#quizLoveValue");
+
+        slider.addEventListener("input", function () {
+
+            value.textContent = `${slider.value}%`;
+
+            selectedQuizAnswer = slider.value;
+
+            if (quizReactionText) {
+                quizReactionText.textContent = "Isso... agora sim. ❤️";
+            }
+
+            if (quizReactionSubtext) {
+                quizReactionSubtext.textContent =
+                    `Você escolheu ${slider.value}% de amor.`;
+            }
+
+            if (quizReaction) {
+                quizReaction.classList.remove("hidden");
+                quizReaction.classList.remove("quiz-reaction-pop");
+                void quizReaction.offsetWidth;
+                quizReaction.classList.add("quiz-reaction-pop");
+            }
+
+            if (quizNext) {
+                quizNext.disabled = false;
+            }
+
         });
 
-        quizOptions.appendChild(button);
-    });
+    } else {
+
+        ["Cauã", "Amanda"].forEach(function (name) {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "quiz-option";
+
+            button.innerHTML = `
+                <span class="quiz-option-heart">♡</span>
+                <span>${name}</span>
+            `;
+
+            button.addEventListener("click", function () {
+                selectQuizAnswer(button, name);
+            });
+
+            quizOptions.appendChild(button);
+        });
+
+    }
 }
 
 function selectQuizAnswer(button, answer) {
