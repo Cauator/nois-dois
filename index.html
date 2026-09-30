@@ -198,45 +198,160 @@
 
     <div class="quiz-card">
 
-        <div class="mini-logo">
-            nós <span>♥</span>
+        <div id="quizIntro" class="quiz-intro">
+
+            <div class="mini-logo">
+                nós <span>♥</span>
+            </div>
+
+            <p class="eyebrow">
+                antes de entrar...
+            </p>
+
+            <div class="quiz-secret-symbol">
+                ♥
+            </div>
+
+            <h1>
+                Existe uma pequena
+                coisa que você precisa
+                responder.
+            </h1>
+
+            <p class="quiz-intro-text">
+                São 10 perguntas sobre nós.
+                Algumas são fáceis.
+                Outras... talvez não. 👀
+            </p>
+
+            <div class="quiz-mystery">
+                <span>10 perguntas</span>
+                <i>•</i>
+                <span>uma história</span>
+                <i>•</i>
+                <span>você decide</span>
+            </div>
+
+            <button
+                id="quizStart"
+                class="main-button"
+                type="button"
+            >
+                começar
+                <span>♥</span>
+            </button>
+
         </div>
 
-        <p class="eyebrow">
-            antes de entrar...
-        </p>
-
-        <div class="quiz-progress">
-
-            <span id="quizProgress">
-                1 / 10
-            </span>
-
-        </div>
-
-        <p
-            id="quizQuestionNumber"
-            class="quiz-label"
-        >
-            PERGUNTA 01
-        </p>
-
-        <h1 id="quizQuestion">
-            Quem é mais chato(a)? 😏
-        </h1>
 
         <div
-            id="quizOptions"
-            class="quiz-options"
-        ></div>
-
-        <button
-            id="quizNext"
-            class="main-button"
-            type="button"
+            id="quizGame"
+            class="quiz-game hidden"
         >
-            Continuar
-        </button>
+
+            <div class="quiz-progress-top">
+
+                <span id="quizProgress">
+                    1 / 10
+                </span>
+
+                <div class="quiz-progress-track">
+                    <span
+                        id="quizProgressBar"
+                        class="quiz-progress-bar"
+                    ></span>
+                </div>
+
+            </div>
+
+
+            <p
+                id="quizQuestionNumber"
+                class="quiz-question-number"
+            >
+                PERGUNTA 01
+            </p>
+
+
+            <h1 id="quizQuestion">
+                Quem é mais chato(a)? 😏
+            </h1>
+
+
+            <p
+                id="quizSuspense"
+                class="quiz-suspense"
+            >
+                Escolha com cuidado...
+            </p>
+
+
+            <div
+                id="quizOptions"
+                class="quiz-options"
+            ></div>
+
+
+            <div
+                id="quizReaction"
+                class="quiz-reaction hidden"
+            >
+
+                <strong id="quizReactionText">
+                    Resposta registrada... 👀
+                </strong>
+
+                <span id="quizReactionSubtext">
+                    Vamos guardar essa.
+                </span>
+
+            </div>
+
+
+            <button
+                id="quizNext"
+                class="main-button"
+                type="button"
+                disabled
+            >
+                próxima pergunta →
+            </button>
+
+        </div>
+
+
+        <div
+            id="quizFinal"
+            class="quiz-final hidden"
+        >
+
+            <div class="quiz-final-heart">
+                ♥
+            </div>
+
+            <p class="eyebrow">
+                você chegou até aqui
+            </p>
+
+            <h1>
+                Agora existe
+                uma última coisa...
+            </h1>
+
+            <p>
+                A nossa história está esperando
+                para ser aberta.
+            </p>
+
+            <button
+                id="quizEnter"
+                class="main-button"
+                type="button"
+            >
+                ABRIR NOSSA HISTÓRIA ❤️
+            </button>
+
+        </div>
 
     </div>
 
