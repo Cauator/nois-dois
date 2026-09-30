@@ -417,6 +417,7 @@ if (loginForm) {
         function (event) {
 
             event.preventDefault();
+            event.stopPropagation();
 
             const username =
                 usernameInput.value
@@ -430,7 +431,6 @@ if (loginForm) {
             const user =
                 USERS[username];
 
-
             if (
                 !user ||
                 user.password !== password
@@ -439,26 +439,26 @@ if (loginForm) {
                 loginError.textContent =
                     "Nome ou senha incorretos.";
 
-                return;
+                return false;
             }
-
 
             loginError.textContent = "";
 
             currentUser = user;
-
 
             localStorage.setItem(
                 "coupleCurrentUser",
                 username
             );
 
+            const quizAlreadyCompleted =
+                localStorage.getItem(
+                    "quizCompleted"
+                ) === "true";
 
             if (
                 user.requiresQuiz &&
-                localStorage.getItem(
-                    "quizCompleted"
-                ) !== "true"
+                !quizAlreadyCompleted
             ) {
 
                 openQuiz();
@@ -468,6 +468,8 @@ if (loginForm) {
                 openMainSite();
 
             }
+
+            return false;
 
         }
     );
@@ -720,35 +722,33 @@ if (quizEnter) {
 
 function openMainSite() {
 
-    loginGate.classList.add(
-        "hidden"
-    );
+    if (loginGate) {
+        loginGate.classList.add("hidden");
+    }
 
-    quizGate.classList.add(
-        "hidden"
-    );
+    if (quizGate) {
+        quizGate.classList.add("hidden");
+    }
 
-    mainSite.classList.remove(
-        "hidden"
-    );
+    if (mainSite) {
+        mainSite.classList.remove("hidden");
+        mainSite.style.display = "";
+    }
 
+    try {
+        updateRelationshipCounter();
+        renderEvolution();
+        renderAlbums();
+        renderDates();
+        renderLetters();
+    } catch (error) {
+        console.error(
+            "Erro ao carregar a história:",
+            error
+        );
+    }
 
-    updateRelationshipCounter();
-
-    renderEvolution();
-
-    renderAlbums();
-
-    renderDates();
-
-    renderLetters();
-
-
-    window.scrollTo(
-        0,
-        0
-    );
-
+    window.scrollTo(0, 0);
 }
 
 
