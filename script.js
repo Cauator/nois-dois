@@ -518,9 +518,6 @@ const quizReactions = [
     { title: "Essa resposta fica guardada. ❤️", text: "Agora falta só uma coisa..." }
 ];
 
-let currentQuizQuestion = 0;
-let selectedQuizAnswer = null;
-
 function openQuiz() {
     loginGate.classList.add("hidden");
     mainSite.classList.add("hidden");
