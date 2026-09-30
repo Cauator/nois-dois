@@ -3670,3 +3670,92 @@ footer p {
     }
 
 }
+
+
+/* =========================================================
+   SLIDER — O QUANTO ELA AMA
+========================================================= */
+
+.quiz-love-slider {
+    width: 100%;
+    padding: 10px 4px 5px;
+    text-align: center;
+}
+
+.quiz-love-value {
+    margin-bottom: 8px;
+    color: #f0d9f4;
+    font-family: var(--display);
+    font-size: clamp(42px, 8vw, 64px);
+    line-height: 1;
+}
+
+.quiz-love-caption {
+    margin: 0 0 28px;
+    color: rgba(255,255,255,.68);
+    font-size: 13px;
+}
+
+.quiz-love-range {
+    width: 100%;
+    height: 8px;
+    margin: 8px 0 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,.14),
+        rgba(216,183,226,.75)
+    );
+    outline: none;
+    cursor: grab;
+}
+
+.quiz-love-range:active {
+    cursor: grabbing;
+}
+
+.quiz-love-range::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #f0d9f4;
+    border: 3px solid rgba(255,255,255,.9);
+    box-shadow: 0 0 25px rgba(216,183,226,.45);
+}
+
+.quiz-love-range::-moz-range-thumb {
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #f0d9f4;
+    border: 3px solid rgba(255,255,255,.9);
+    box-shadow: 0 0 25px rgba(216,183,226,.45);
+}
+
+.quiz-love-labels {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255,255,255,.36);
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 650px) {
+    .quiz-love-slider {
+        padding-top: 5px;
+    }
+
+    .quiz-love-caption {
+        margin-bottom: 24px;
+    }
+
+    .quiz-love-range {
+        height: 9px;
+    }
+}
