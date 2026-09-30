@@ -410,62 +410,6 @@ let toastTimeout = null;
    LOGIN
 ========================================================= */
 
-function handleLogin() {
-
-    const username =
-        usernameInput.value
-            .trim()
-            .toLowerCase();
-
-    const password =
-        passwordInput.value
-            .trim();
-
-    const user =
-        USERS[username];
-
-    if (
-        !user ||
-        user.password !== password
-    ) {
-
-        loginError.textContent =
-            "Nome ou senha incorretos.";
-
-        return;
-
-    }
-
-    loginError.textContent = "";
-
-    currentUser = user;
-
-    localStorage.setItem(
-        "coupleCurrentUser",
-        username
-    );
-
-    const quizAlreadyCompleted =
-        localStorage.getItem(
-            "quizCompleted"
-        ) === "true";
-
-    if (
-        user.requiresQuiz &&
-        !quizAlreadyCompleted
-    ) {
-
-        openQuiz();
-
-    } else {
-
-        openMainSite();
-
-    }
-
-}
-
-
 if (loginForm) {
 
     loginForm.addEventListener(
@@ -475,28 +419,57 @@ if (loginForm) {
             event.preventDefault();
             event.stopPropagation();
 
-            handleLogin();
+            const username =
+                usernameInput.value
+                    .trim()
+                    .toLowerCase();
 
-        }
-    );
+            const password =
+                passwordInput.value
+                    .trim();
 
-}
+            const user =
+                USERS[username];
 
+            if (
+                !user ||
+                user.password !== password
+            ) {
 
-const loginButton =
-    document.getElementById("loginButton");
+                loginError.textContent =
+                    "Nome ou senha incorretos.";
 
+                return false;
+            }
 
-if (loginButton) {
+            loginError.textContent = "";
 
-    loginButton.addEventListener(
-        "click",
-        function (event) {
+            currentUser = user;
 
-            event.preventDefault();
-            event.stopPropagation();
+            localStorage.setItem(
+                "coupleCurrentUser",
+                username
+            );
 
-            handleLogin();
+            const quizAlreadyCompleted =
+                localStorage.getItem(
+                    "quizCompleted"
+                ) === "true";
+
+            if (
+                user.requiresQuiz &&
+                !quizAlreadyCompleted
+            ) {
+
+                openQuiz();
+
+            } else {
+
+                openMainSite();
+
+            }
+
+            return false;
 
         }
     );
