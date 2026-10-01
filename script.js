@@ -5,6 +5,22 @@
 const RELATIONSHIP_START =
     new Date(2023, 0, 17, 0, 0, 0);
 
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+const SUPABASE_URL =
+    "https://eytswffpxniuruwtdjvg.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_I8h8AT6qdrZlWld1DeSpFg_ZXNH774B";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
 
 /* =========================================================
    USUÁRIOS
@@ -14,13 +30,13 @@ const USERS = {
 
     amanda: {
         name: "Amanda",
-        password: "170123",
+        email: "amanda@nois-dois.com",
         requiresQuiz: true
     },
 
     caua: {
         name: "Cauã",
-        password: "123456",
+        email: "caua@nois-dois.com",
         requiresQuiz: false
     }
 
@@ -393,6 +409,8 @@ let currentQuizQuestion = 0;
 
 let selectedQuizAnswer = null;
 
+let quizAnswers = [];
+
 let currentEvolutionType = null;
 
 let editingAlbumId = null;
@@ -414,7 +432,7 @@ if (loginForm) {
 
     loginForm.addEventListener(
         "submit",
-        function (event) {
+        async function (event) {
 
             event.preventDefault();
             event.stopPropagation();
@@ -431,11 +449,7 @@ if (loginForm) {
             const user =
                 USERS[username];
 
-            if (
-                !user ||
-                user.password !== password
-            ) {
-
+            if (!user) {
                 loginError.textContent =
                     "Nome ou senha incorretos.";
 
@@ -444,7 +458,30 @@ if (loginForm) {
 
             loginError.textContent = "";
 
-            currentUser = user;
+            const {
+                data,
+                error
+            } = await supabaseClient.auth.signInWithPassword({
+                email: user.email,
+                password
+            });
+
+            if (error || !data.user) {
+                console.error(
+                    "Erro no login:",
+                    error
+                );
+
+                loginError.textContent =
+                    "Nome ou senha incorretos.";
+
+                return false;
+            }
+
+            currentUser = {
+                ...user,
+                id: data.user.id
+            };
 
             localStorage.setItem(
                 "coupleCurrentUser",
@@ -453,7 +490,7 @@ if (loginForm) {
 
             const quizAlreadyCompleted =
                 localStorage.getItem(
-                    "quizCompleted"
+                    `quizCompleted_${username}`
                 ) === "true";
 
             if (
@@ -542,6 +579,7 @@ if (quizStart) {
 
         currentQuizQuestion = 0;
         selectedQuizAnswer = null;
+        quizAnswers = [];
 
         renderQuizQuestion();
     });
@@ -740,11 +778,15 @@ function createQuizHeart(button) {
 }
 
 if (quizNext) {
-    quizNext.addEventListener("click", function () {
+    quizNext.addEventListener("click", async function () {
+
         if (!selectedQuizAnswer) {
             showToast("Escolha uma resposta primeiro. ❤️");
             return;
         }
+
+        quizAnswers[currentQuizQuestion] =
+            String(selectedQuizAnswer);
 
         if (currentQuizQuestion < quizQuestions.length - 1) {
             currentQuizQuestion++;
@@ -752,12 +794,50 @@ if (quizNext) {
             return;
         }
 
-        finishQuiz();
+        await finishQuiz();
     });
 }
 
-function finishQuiz() {
-    localStorage.setItem("quizCompleted", "true");
+async function finishQuiz() {
+
+    const username =
+        localStorage.getItem("coupleCurrentUser");
+
+    if (currentUser && quizAnswers.length) {
+
+        const { error } =
+            await supabaseClient
+                .from("quiz_answers")
+                .upsert(
+                    quizAnswers.map(
+                        function (answer, index) {
+                            return {
+                                user_id: currentUser.id,
+                                question_number: index + 1,
+                                answer
+                            };
+                        }
+                    ),
+                    {
+                        onConflict:
+                            "user_id,question_number"
+                    }
+                );
+
+        if (error) {
+            console.error(
+                "Erro ao salvar respostas do quiz:",
+                error
+            );
+        }
+    }
+
+    if (username) {
+        localStorage.setItem(
+            `quizCompleted_${username}`,
+            "true"
+        );
+    }
 
     if (quizGame) quizGame.classList.add("hidden");
     if (quizIntro) quizIntro.classList.add("hidden");
@@ -766,6 +846,7 @@ function finishQuiz() {
         if (quizFinal) quizFinal.classList.remove("hidden");
     }, 350);
 }
+
 
 if (quizEnter) {
     quizEnter.addEventListener("click", function () {
@@ -3650,30 +3731,66 @@ migrateOldMemories()
    RECUPERAR SESSÃO
 ========================================================= */
 
-const savedUser =
-    localStorage.getItem(
-        "coupleCurrentUser"
+/*
+   O Supabase mantém a sessão automaticamente.
+   A senha nunca é salva no navegador.
+*/
+
+supabaseClient.auth.getSession()
+    .then(
+        async function ({ data }) {
+
+            const session =
+                data && data.session;
+
+            if (!session || !session.user) {
+                return;
+            }
+
+            const email =
+                (session.user.email || "")
+                    .toLowerCase();
+
+            const username =
+                email === "amanda@nois-dois.com"
+                    ? "amanda"
+                    : email === "caua@nois-dois.com"
+                        ? "caua"
+                        : null;
+
+            if (!username || !USERS[username]) {
+                return;
+            }
+
+            currentUser = {
+                ...USERS[username],
+                id: session.user.id
+            };
+
+            localStorage.setItem(
+                "coupleCurrentUser",
+                username
+            );
+
+            const quizAlreadyCompleted =
+                localStorage.getItem(
+                    `quizCompleted_${username}`
+                ) === "true";
+
+            if (
+                !currentUser.requiresQuiz ||
+                quizAlreadyCompleted
+            ) {
+                openMainSite();
+            }
+
+        }
+    )
+    .catch(
+        function (error) {
+            console.error(
+                "Erro ao recuperar sessão:",
+                error
+            );
+        }
     );
-
-
-if (
-    savedUser &&
-    USERS[savedUser]
-) {
-
-    currentUser =
-        USERS[savedUser];
-
-
-    if (
-        !currentUser.requiresQuiz ||
-        localStorage.getItem(
-            "quizCompleted"
-        ) === "true"
-    ) {
-
-        openMainSite();
-
-    }
-
-}
