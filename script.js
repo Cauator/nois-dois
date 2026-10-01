@@ -1922,6 +1922,9 @@ if (albumForm) {
 
             try {
 
+                const wasEditing =
+                    Boolean(editingAlbumId);
+
                 if (editingAlbumId) {
 
                     const album =
@@ -2044,7 +2047,7 @@ if (albumForm) {
                 await renderAlbums();
 
                 showToast(
-                    editingAlbumId
+                    wasEditing
                         ? "Álbum atualizado ❤️"
                         : "Álbum criado ❤️"
                 );
