@@ -867,7 +867,7 @@ if (quizEnter) {
    SITE
 ========================================================= */
 
-function openMainSite() {
+async function openMainSite() {
 
     if (loginGate) {
         loginGate.classList.add("hidden");
@@ -884,10 +884,13 @@ function openMainSite() {
 
     try {
         updateRelationshipCounter();
-        renderEvolution();
-        renderAlbums();
-        renderDates();
-        renderLetters();
+
+        await Promise.all([
+            renderEvolution(),
+            renderAlbums(),
+            renderDates(),
+            renderLetters()
+        ]);
     } catch (error) {
         console.error(
             "Erro ao carregar a história:",
@@ -1231,101 +1234,177 @@ function compressImage(
 
 
 /* =========================================================
+   SUPABASE — ARQUIVOS E DADOS DO CASAL
+========================================================= */
+
+const STORAGE_BUCKET = "couple-photos";
+const SIGNED_URL_SECONDS = 3600;
+
+function dataUrlToBlob(dataUrl) {
+    const parts = dataUrl.split(",");
+    const mime = parts[0].match(/:(.*?);/)[1];
+    const binary = atob(parts[1]);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([bytes], { type: mime });
+}
+
+async function uploadDataUrl(dataUrl, path) {
+    const blob = dataUrlToBlob(dataUrl);
+
+    const { error } =
+        await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .upload(path, blob, {
+                contentType: blob.type || "image/jpeg",
+                cacheControl: "31536000",
+                upsert: true
+            });
+
+    if (error) {
+        throw error;
+    }
+
+    return path;
+}
+
+async function getSignedUrl(path) {
+    if (!path) {
+        return "";
+    }
+
+    const { data, error } =
+        await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .createSignedUrl(
+                path,
+                SIGNED_URL_SECONDS
+            );
+
+    if (error) {
+        throw error;
+    }
+
+    return data.signedUrl;
+}
+
+async function getSignedUrls(paths) {
+    const cleanPaths =
+        paths.filter(Boolean);
+
+    if (!cleanPaths.length) {
+        return [];
+    }
+
+    const { data, error } =
+        await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .createSignedUrls(
+                cleanPaths,
+                SIGNED_URL_SECONDS
+            );
+
+    if (error) {
+        throw error;
+    }
+
+    return data.map(function (item) {
+        return item.signedUrl;
+    });
+}
+
+async function removeStorageFile(path) {
+    if (!path) {
+        return;
+    }
+
+    const { error } =
+        await supabaseClient.storage
+            .from(STORAGE_BUCKET)
+            .remove([path]);
+
+    if (error) {
+        console.error(
+            "Erro ao excluir arquivo:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
    EVOLUÇÃO
 ========================================================= */
 
 const evolutionDefaults = {
 
     beginning: {
-
         title: "O começo",
-
-        description:
-            "Onde tudo nasceu."
-
+        description: "Onde tudo nasceu."
     },
 
     middle: {
-
         title: "No meio",
-
-        description:
-            "Tudo que construímos."
-
+        description: "Tudo que construímos."
     },
 
     current: {
-
         title: "Atualmente",
-
-        description:
-            "Nós dois, hoje."
-
+        description: "Nós dois, hoje."
     }
 
 };
 
+async function getEvolution() {
+    const { data, error } =
+        await supabaseClient
+            .from("evolution")
+            .select("*");
 
-function getEvolution() {
-
-    try {
-
-        return JSON.parse(
-            localStorage.getItem(
-                "coupleEvolution"
-            )
-        ) || {};
-
-    } catch {
-
+    if (error) {
+        console.error(
+            "Erro ao carregar evolução:",
+            error
+        );
         return {};
-
     }
 
+    const result = {};
+
+    for (const item of data || []) {
+        result[item.stage] = item;
+    }
+
+    return result;
 }
 
-
-function saveEvolution(
-    data
-) {
-
-    localStorage.setItem(
-        "coupleEvolution",
-        JSON.stringify(data)
-    );
-
-}
-
-
-function openEvolution(
-    type
-) {
+async function openEvolution(type) {
 
     currentEvolutionType =
         type;
 
-
     const data =
-        getEvolution()[type];
+        await getEvolution();
 
+    const saved =
+        data[type];
 
     evolutionModalTitle.textContent =
         `Foto — ${evolutionDefaults[type].title}`;
 
-
     evolutionDescription.value =
-        data?.description || "";
-
+        saved?.description || "";
 
     evolutionPhoto.value = "";
-
 
     evolutionModal.classList.remove(
         "hidden"
     );
-
 }
-
 
 if (evolutionGrid) {
 
@@ -1338,11 +1417,9 @@ if (evolutionGrid) {
                     "[data-evolution-action]"
                 );
 
-
             if (!button) {
                 return;
             }
-
 
             openEvolution(
                 button.dataset.evolutionAction
@@ -1352,7 +1429,6 @@ if (evolutionGrid) {
     );
 
 }
-
 
 if (closeEvolutionModal) {
 
@@ -1368,7 +1444,6 @@ if (closeEvolutionModal) {
     );
 
 }
-
 
 if (evolutionModal) {
 
@@ -1387,7 +1462,6 @@ if (evolutionModal) {
 
 }
 
-
 if (evolutionForm) {
 
     evolutionForm.addEventListener(
@@ -1396,10 +1470,11 @@ if (evolutionForm) {
 
             event.preventDefault();
 
-
             const file =
                 evolutionPhoto.files[0];
 
+            const description =
+                evolutionDescription.value.trim();
 
             if (!file) {
 
@@ -1411,7 +1486,6 @@ if (evolutionForm) {
 
             }
 
-
             try {
 
                 const photo =
@@ -1419,42 +1493,77 @@ if (evolutionForm) {
                         file
                     );
 
+                const existingData =
+                    await getEvolution();
 
-                const data =
-                    getEvolution();
+                const oldPath =
+                    existingData[
+                        currentEvolutionType
+                    ]?.storage_path;
 
+                const path =
+                    `evolution/${currentEvolutionType}-${crypto.randomUUID()}.jpg`;
 
-                data[currentEvolutionType] = {
-
+                await uploadDataUrl(
                     photo,
+                    path
+                );
 
-                    description:
-                        evolutionDescription
-                            .value
-                            .trim()
+                const { error } =
+                    await supabaseClient
+                        .from("evolution")
+                        .upsert(
+                            {
+                                stage:
+                                    currentEvolutionType,
 
-                };
+                                storage_path:
+                                    path,
 
+                                description,
 
-                saveEvolution(data);
+                                updated_by:
+                                    currentUser?.id || null,
 
+                                updated_at:
+                                    new Date().toISOString()
+                            },
+                            {
+                                onConflict:
+                                    "stage"
+                            }
+                        );
+
+                if (error) {
+                    await removeStorageFile(path);
+                    throw error;
+                }
+
+                if (oldPath) {
+                    await removeStorageFile(
+                        oldPath
+                    );
+                }
 
                 evolutionModal.classList.add(
                     "hidden"
                 );
 
-
-                renderEvolution();
-
+                await renderEvolution();
 
                 showToast(
                     "Foto guardada ❤️"
                 );
 
-            } catch {
+            } catch (error) {
+
+                console.error(
+                    "Erro ao salvar evolução:",
+                    error
+                );
 
                 showToast(
-                    "Não foi possível carregar a foto."
+                    "Não foi possível guardar a foto."
                 );
 
             }
@@ -1464,381 +1573,276 @@ if (evolutionForm) {
 
 }
 
+async function renderEvolution() {
 
-function renderEvolution() {
-
-    const data =
-        getEvolution();
-
-
-    Object.keys(
-        evolutionDefaults
-    ).forEach(
-        function (type) {
-
-            const card =
-                evolutionGrid.querySelector(
-                    `[data-evolution="${type}"]`
-                );
-
-
-            if (!card) {
-                return;
-            }
-
-
-            const image =
-                card.querySelector(
-                    ".evolution-photo"
-                );
-
-
-            const info =
-                card.querySelector(
-                    ".evolution-info"
-                );
-
-
-            const saved =
-                data[type];
-
-
-            if (saved?.photo) {
-
-                image.innerHTML = `
-
-                    <img
-                        src="${saved.photo}"
-                        alt="${evolutionDefaults[type].title}"
-                    >
-
-                `;
-
-
-                info.querySelector(
-                    "p"
-                ).textContent =
-                    saved.description ||
-                    evolutionDefaults[type].description;
-
-
-                info.querySelector(
-                    ".text-button"
-                ).textContent =
-                    "trocar foto";
-
-            } else {
-
-                image.innerHTML = `
-
-                    <div class="evolution-empty">
-
-                        <span>+</span>
-
-                        <p>
-                            adicionar foto
-                        </p>
-
-                    </div>
-
-                `;
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ÁLBUNS — INDEXED DB
-========================================================= */
-
-const DB_NAME =
-    "NosDoisAlbumDB";
-
-const DB_VERSION = 1;
-
-const STORE =
-    "albumPhotos";
-
-let dbPromise;
-
-
-function openDatabase() {
-
-    if (dbPromise) {
-        return dbPromise;
+    if (!evolutionGrid) {
+        return;
     }
-
-
-    dbPromise =
-        new Promise(
-            function (resolve, reject) {
-
-                const request =
-                    indexedDB.open(
-                        DB_NAME,
-                        DB_VERSION
-                    );
-
-
-                request.onupgradeneeded =
-                    function () {
-
-                        const db =
-                            request.result;
-
-
-                        if (
-                            !db.objectStoreNames
-                                .contains(
-                                    STORE
-                                )
-                        ) {
-
-                            db.createObjectStore(
-                                STORE,
-                                {
-                                    keyPath:
-                                        "id"
-                                }
-                            );
-
-                        }
-
-                    };
-
-
-                request.onsuccess =
-                    function () {
-
-                        resolve(
-                            request.result
-                        );
-
-                    };
-
-
-                request.onerror =
-                    function () {
-
-                        reject(
-                            request.error
-                        );
-
-                    };
-
-            }
-        );
-
-
-    return dbPromise;
-
-}
-
-
-async function dbPut(
-    item
-) {
-
-    const db =
-        await openDatabase();
-
-
-    return new Promise(
-        function (resolve, reject) {
-
-            const transaction =
-                db.transaction(
-                    STORE,
-                    "readwrite"
-                );
-
-
-            transaction
-                .objectStore(STORE)
-                .put(item);
-
-
-            transaction.oncomplete =
-                () => resolve();
-
-
-            transaction.onerror =
-                () =>
-                    reject(
-                        transaction.error
-                    );
-
-        }
-    );
-
-}
-
-
-async function dbGetAll() {
-
-    const db =
-        await openDatabase();
-
-
-    return new Promise(
-        function (resolve, reject) {
-
-            const request =
-                db.transaction(
-                    STORE,
-                    "readonly"
-                )
-                .objectStore(
-                    STORE
-                )
-                .getAll();
-
-
-            request.onsuccess =
-                () =>
-                    resolve(
-                        request.result
-                    );
-
-
-            request.onerror =
-                () =>
-                    reject(
-                        request.error
-                    );
-
-        }
-    );
-
-}
-
-
-async function dbDelete(
-    id
-) {
-
-    const db =
-        await openDatabase();
-
-
-    return new Promise(
-        function (resolve, reject) {
-
-            const transaction =
-                db.transaction(
-                    STORE,
-                    "readwrite"
-                );
-
-
-            transaction
-                .objectStore(STORE)
-                .delete(id);
-
-
-            transaction.oncomplete =
-                () => resolve();
-
-
-            transaction.onerror =
-                () =>
-                    reject(
-                        transaction.error
-                    );
-
-        }
-    );
-
-}
-
-
-async function dbDeleteAlbum(
-    albumId
-) {
-
-    const photos =
-        await dbGetAll();
-
-
-    const related =
-        photos.filter(
-            photo =>
-                photo.albumId ===
-                albumId
-        );
-
-
-    for (
-        const photo
-        of related
-    ) {
-
-        await dbDelete(
-            photo.id
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   METADADOS DOS ÁLBUNS
-========================================================= */
-
-function getAlbums() {
 
     try {
 
-        return JSON.parse(
-            localStorage.getItem(
-                "coupleAlbums"
-            )
-        ) || [];
+        const data =
+            await getEvolution();
 
-    } catch {
+        const paths =
+            Object.values(data)
+                .map(
+                    item =>
+                        item.storage_path
+                )
+                .filter(Boolean);
 
-        return [];
+        const urls =
+            await getSignedUrls(paths);
+
+        const urlByPath =
+            {};
+
+        paths.forEach(
+            function (path, index) {
+                urlByPath[path] =
+                    urls[index];
+            }
+        );
+
+        Object.keys(
+            evolutionDefaults
+        ).forEach(
+            function (type) {
+
+                const card =
+                    evolutionGrid.querySelector(
+                        `[data-evolution="${type}"]`
+                    );
+
+                if (!card) {
+                    return;
+                }
+
+                const image =
+                    card.querySelector(
+                        ".evolution-photo"
+                    );
+
+                const info =
+                    card.querySelector(
+                        ".evolution-info"
+                    );
+
+                const saved =
+                    data[type];
+
+                const savedUrl =
+                    saved
+                        ? urlByPath[
+                            saved.storage_path
+                        ]
+                        : "";
+
+                if (savedUrl) {
+
+                    image.innerHTML = `
+
+                        <img
+                            src="${savedUrl}"
+                            alt="${evolutionDefaults[type].title}"
+                        >
+
+                    `;
+
+                    info.querySelector(
+                        "p"
+                    ).textContent =
+                        saved.description ||
+                        evolutionDefaults[type].description;
+
+                    info.querySelector(
+                        ".text-button"
+                    ).textContent =
+                        "trocar foto";
+
+                } else {
+
+                    image.innerHTML = `
+
+                        <div class="evolution-empty">
+
+                            <span>+</span>
+
+                            <p>
+                                adicionar foto
+                            </p>
+
+                        </div>
+
+                    `;
+
+                    info.querySelector(
+                        "p"
+                    ).textContent =
+                        evolutionDefaults[type].description;
+
+                    info.querySelector(
+                        ".text-button"
+                    ).textContent =
+                        "adicionar foto";
+
+                }
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao renderizar evolução:",
+            error
+        );
 
     }
 
 }
 
 
-function saveAlbums(
-    albums
-) {
+/* =========================================================
+   ÁLBUNS
+========================================================= */
 
-    localStorage.setItem(
-        "coupleAlbums",
-        JSON.stringify(
-            albums
-        )
-    );
+async function getAlbums() {
 
+    const { data, error } =
+        await supabaseClient
+            .from("albums")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
+
+    if (error) {
+        console.error(
+            "Erro ao carregar álbuns:",
+            error
+        );
+        return [];
+    }
+
+    return data || [];
 }
 
+async function getAlbum(id) {
 
-function getAlbum(
-    id
-) {
+    const { data, error } =
+        await supabaseClient
+            .from("albums")
+            .select("*")
+            .eq("id", id)
+            .single();
 
-    return getAlbums()
-        .find(
-            album =>
-                album.id === id
+    if (error) {
+        console.error(
+            "Erro ao carregar álbum:",
+            error
+        );
+        return null;
+    }
+
+    return data;
+}
+
+async function getAlbumPhotos(albumId) {
+
+    const { data, error } =
+        await supabaseClient
+            .from("photos")
+            .select("*")
+            .eq(
+                "album_id",
+                albumId
+            )
+            .order(
+                "sort_order",
+                {
+                    ascending: true
+                }
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: true
+                }
+            );
+
+    if (error) {
+        console.error(
+            "Erro ao carregar fotos:",
+            error
+        );
+        return [];
+    }
+
+    const photos =
+        data || [];
+
+    if (!photos.length) {
+        return [];
+    }
+
+    try {
+
+        const urls =
+            await getSignedUrls(
+                photos.map(
+                    photo =>
+                        photo.storage_path
+                )
+            );
+
+        return photos.map(
+            function (photo, index) {
+                return {
+                    ...photo,
+                    url: urls[index]
+                };
+            }
         );
 
+    } catch (error) {
+
+        console.error(
+            "Erro ao criar URLs das fotos:",
+            error
+        );
+
+        return [];
+    }
 }
 
+async function deletePhotoRecord(photo) {
 
-/* =========================================================
-   CRIAR ÁLBUM
-========================================================= */
+    if (!photo) {
+        return;
+    }
+
+    await removeStorageFile(
+        photo.storage_path
+    );
+
+    const { error } =
+        await supabaseClient
+            .from("photos")
+            .delete()
+            .eq(
+                "id",
+                photo.id
+            );
+
+    if (error) {
+        throw error;
+    }
+}
 
 if (createAlbumButton) {
 
@@ -1862,7 +1866,6 @@ if (createAlbumButton) {
 
 }
 
-
 if (closeAlbumModal) {
 
     closeAlbumModal.addEventListener(
@@ -1871,7 +1874,6 @@ if (closeAlbumModal) {
     );
 
 }
-
 
 function closeAlbumModalFunction() {
 
@@ -1882,7 +1884,6 @@ function closeAlbumModalFunction() {
     editingAlbumId = null;
 
 }
-
 
 if (albumModal) {
 
@@ -1895,7 +1896,6 @@ if (albumModal) {
 
 }
 
-
 if (albumForm) {
 
     albumForm.addEventListener(
@@ -1904,14 +1904,11 @@ if (albumForm) {
 
             event.preventDefault();
 
-
             const name =
                 albumName.value.trim();
 
-
             const description =
                 albumDescription.value.trim();
-
 
             if (!name) {
 
@@ -1923,172 +1920,152 @@ if (albumForm) {
 
             }
 
+            try {
 
-            const albums =
-                getAlbums();
+                if (editingAlbumId) {
 
-
-            if (editingAlbumId) {
-
-                const album =
-                    albums.find(
-                        item =>
-                            item.id ===
+                    const album =
+                        await getAlbum(
                             editingAlbumId
-                    );
-
-
-                if (!album) {
-                    return;
-                }
-
-
-                album.name =
-                    name;
-
-                album.description =
-                    description;
-
-
-                if (
-                    albumCover.files[0]
-                ) {
-
-                    const photo =
-                        await compressImage(
-                            albumCover.files[0],
-                            1400,
-                            .78
                         );
 
-
-                    const existing =
-                        (
-                            await dbGetAll()
-                        ).find(
-                            item =>
-                                item.albumId ===
-                                album.id &&
-                                item.isCover
-                        );
-
-
-                    if (existing) {
-
-                        existing.data =
-                            photo;
-
-                        await dbPut(
-                            existing
-                        );
-
-                    } else {
-
-                        await dbPut({
-
-                            id:
-                                crypto.randomUUID(),
-
-                            albumId:
-                                album.id,
-
-                            data:
-                                photo,
-
-                            isCover:
-                                true
-
-                        });
-
+                    if (!album) {
+                        return;
                     }
 
-                }
+                    const update = {
+                        name,
+                        description,
+                        updated_at:
+                            new Date().toISOString()
+                    };
 
+                    let oldCoverPath =
+                        album.cover_path;
 
-            } else {
+                    if (albumCover.files[0]) {
 
-                const id =
-                    crypto.randomUUID();
+                        const photo =
+                            await compressImage(
+                                albumCover.files[0],
+                                1400,
+                                .78
+                            );
 
+                        const path =
+                            `albums/${album.id}/cover-${crypto.randomUUID()}.jpg`;
 
-                const album = {
-
-                    id,
-
-                    name,
-
-                    description,
-
-                    createdAt:
-                        new Date()
-                            .toISOString()
-
-                };
-
-
-                albums.push(
-                    album
-                );
-
-
-                if (
-                    albumCover.files[0]
-                ) {
-
-                    const photo =
-                        await compressImage(
-                            albumCover.files[0],
-                            1400,
-                            .78
+                        await uploadDataUrl(
+                            photo,
+                            path
                         );
 
+                        update.cover_path =
+                            path;
 
-                    await dbPut({
+                        if (oldCoverPath) {
+                            await removeStorageFile(
+                                oldCoverPath
+                            );
+                        }
+                    }
 
-                        id:
-                            crypto.randomUUID(),
+                    const { error } =
+                        await supabaseClient
+                            .from("albums")
+                            .update(update)
+                            .eq(
+                                "id",
+                                album.id
+                            );
 
-                        albumId:
-                            id,
+                    if (error) {
+                        throw error;
+                    }
 
-                        data:
+                } else {
+
+                    const { data: album, error } =
+                        await supabaseClient
+                            .from("albums")
+                            .insert({
+                                name,
+                                description,
+                                created_by:
+                                    currentUser?.id || null
+                            })
+                            .select()
+                            .single();
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    if (albumCover.files[0]) {
+
+                        const photo =
+                            await compressImage(
+                                albumCover.files[0],
+                                1400,
+                                .78
+                            );
+
+                        const path =
+                            `albums/${album.id}/cover-${crypto.randomUUID()}.jpg`;
+
+                        await uploadDataUrl(
                             photo,
+                            path
+                        );
 
-                        isCover:
-                            true
+                        const { error: coverError } =
+                            await supabaseClient
+                                .from("albums")
+                                .update({
+                                    cover_path:
+                                        path
+                                })
+                                .eq(
+                                    "id",
+                                    album.id
+                                );
 
-                    });
-
+                        if (coverError) {
+                            await removeStorageFile(
+                                path
+                            );
+                            throw coverError;
+                        }
+                    }
                 }
 
+                closeAlbumModalFunction();
+
+                await renderAlbums();
+
+                showToast(
+                    editingAlbumId
+                        ? "Álbum atualizado ❤️"
+                        : "Álbum criado ❤️"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Erro ao salvar álbum:",
+                    error
+                );
+
+                showToast(
+                    "Não foi possível salvar o álbum."
+                );
+
             }
-
-
-            saveAlbums(
-                albums
-            );
-
-
-            closeAlbumModalFunction();
-
-            renderAlbums();
-
-
-            showToast(
-                editingAlbumId
-                    ? "Álbum atualizado ❤️"
-                    : "Álbum criado ❤️"
-            );
 
         }
     );
 
 }
-
-
-/* =========================================================
-   RENDER ÁLBUNS
-========================================================= */
 
 async function renderAlbums() {
 
@@ -2096,203 +2073,261 @@ async function renderAlbums() {
         return;
     }
 
-
     albumsView.innerHTML = "";
 
+    try {
 
-    const albums =
-        getAlbums();
+        const albums =
+            await getAlbums();
 
+        if (!albums.length) {
 
-    if (!albums.length) {
+            albumsView.innerHTML = `
+
+                <div class="empty-state">
+
+                    <p>
+                        Crie o primeiro álbum
+                        da nossa história.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+        }
+
+        const { data: allPhotos, error } =
+            await supabaseClient
+                .from("photos")
+                .select(
+                    "id, album_id, storage_path, sort_order, created_at"
+                )
+                .order(
+                    "sort_order",
+                    {
+                        ascending: true
+                    }
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: true
+                    }
+                );
+
+        if (error) {
+            throw error;
+        }
+
+        const photos =
+            allPhotos || [];
+
+        const coverPaths =
+            albums
+                .map(
+                    album =>
+                        album.cover_path
+                )
+                .filter(Boolean);
+
+        const fallbackPaths =
+            albums
+                .filter(
+                    album =>
+                        !album.cover_path
+                )
+                .map(
+                    album =>
+                        photos.find(
+                            photo =>
+                                photo.album_id ===
+                                album.id
+                        )?.storage_path
+                )
+                .filter(Boolean);
+
+        const urls =
+            await getSignedUrls(
+                coverPaths.concat(
+                    fallbackPaths
+                )
+            );
+
+        const urlByPath =
+            {};
+
+        coverPaths.concat(
+            fallbackPaths
+        ).forEach(
+            function (path, index) {
+                urlByPath[path] =
+                    urls[index];
+            }
+        );
+
+        for (const album of albums) {
+
+            const albumPhotos =
+                photos.filter(
+                    photo =>
+                        photo.album_id ===
+                        album.id
+                );
+
+            const coverPath =
+                album.cover_path ||
+                albumPhotos[0]?.storage_path;
+
+            const coverUrl =
+                coverPath
+                    ? urlByPath[coverPath]
+                    : "";
+
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+            card.className =
+                "album-card";
+
+            card.dataset.id =
+                album.id;
+
+            card.innerHTML = `
+
+                <div class="album-cover">
+
+                    ${
+                        coverUrl
+
+                            ? `
+
+                                <img
+                                    src="${coverUrl}"
+                                    alt="${escapeHTML(
+                                        album.name
+                                    )}"
+                                >
+
+                            `
+
+                            : `
+
+                                <div class="album-empty">
+
+                                    <span>♥</span>
+
+                                </div>
+
+                            `
+                    }
+
+                </div>
+
+                <div class="album-info">
+
+                    <small>
+                        ${albumPhotos.length}
+                        ${albumPhotos.length === 1 ? "foto" : "fotos"}
+                    </small>
+
+                    <h3>
+                        ${escapeHTML(
+                            album.name
+                        )}
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(
+                            album.description ||
+                            "Uma coleção de lembranças."
+                        )}
+                    </p>
+
+                </div>
+
+            `;
+
+            card.addEventListener(
+                "click",
+                function () {
+
+                    openAlbum(
+                        album.id
+                    );
+
+                }
+            );
+
+            albumsView.appendChild(
+                card
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao renderizar álbuns:",
+            error
+        );
 
         albumsView.innerHTML = `
 
             <div class="empty-state">
 
                 <p>
-                    Crie o primeiro álbum
-                    da nossa história.
+                    Não foi possível carregar
+                    nossos álbuns agora.
                 </p>
 
             </div>
 
         `;
-
-        return;
-
-    }
-
-
-    const photos =
-        await dbGetAll();
-
-
-    for (
-        const album
-        of albums
-    ) {
-
-        const albumPhotos =
-            photos.filter(
-                photo =>
-                    photo.albumId ===
-                    album.id
-            );
-
-
-        const cover =
-            albumPhotos.find(
-                photo =>
-                    photo.isCover
-            ) ||
-            albumPhotos[0];
-
-
-        const card =
-            document.createElement(
-                "article"
-            );
-
-
-        card.className =
-            "album-card";
-
-
-        card.dataset.id =
-            album.id;
-
-
-        card.innerHTML = `
-
-            <div class="album-cover">
-
-                ${
-                    cover
-
-                        ? `
-
-                            <img
-                                src="${cover.data}"
-                                alt="${escapeHTML(
-                                    album.name
-                                )}"
-                            >
-
-                        `
-
-                        : `
-
-                            <div class="album-empty">
-
-                                <span>♥</span>
-
-                            </div>
-
-                        `
-                }
-
-            </div>
-
-
-            <div class="album-info">
-
-                <small>
-                    ${albumPhotos.length}
-                    ${albumPhotos.length === 1 ? "foto" : "fotos"}
-                </small>
-
-
-                <h3>
-                    ${escapeHTML(
-                        album.name
-                    )}
-                </h3>
-
-
-                <p>
-                    ${escapeHTML(
-                        album.description ||
-                        "Uma coleção de lembranças."
-                    )}
-                </p>
-
-            </div>
-
-        `;
-
-
-        card.addEventListener(
-            "click",
-            function () {
-
-                openAlbum(
-                    album.id
-                );
-
-            }
-        );
-
-
-        albumsView.appendChild(
-            card
-        );
 
     }
 
 }
 
-
-/* =========================================================
-   ABRIR ÁLBUM
-========================================================= */
-
-async function openAlbum(
-    id
-) {
+async function openAlbum(id) {
 
     currentAlbumId =
         id;
 
-
     const album =
-        getAlbum(id);
-
+        await getAlbum(id);
 
     if (!album) {
         return;
     }
 
-
     albumsView.classList.add(
         "hidden"
     );
-
 
     albumDetail.classList.remove(
         "hidden"
     );
 
-
     albumDetailTitle.textContent =
         album.name;
-
 
     albumDetailDescription.textContent =
         album.description ||
         "Uma coleção de lembranças da nossa história.";
 
-
     await renderAlbumPhotos();
 
 }
-
 
 if (backAlbumsButton) {
 
     backAlbumsButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             currentAlbumId =
                 null;
@@ -2305,17 +2340,12 @@ if (backAlbumsButton) {
                 "hidden"
             );
 
-            renderAlbums();
+            await renderAlbums();
 
         }
     );
 
 }
-
-
-/* =========================================================
-   ADICIONAR FOTOS
-========================================================= */
 
 if (addPhotosButton) {
 
@@ -2327,7 +2357,6 @@ if (addPhotosButton) {
                 return;
             }
 
-
             photosForm.reset();
 
             photosModal.classList.remove(
@@ -2338,7 +2367,6 @@ if (addPhotosButton) {
     );
 
 }
-
 
 if (closePhotosModal) {
 
@@ -2354,7 +2382,6 @@ if (closePhotosModal) {
     );
 
 }
-
 
 if (photosModal) {
 
@@ -2373,7 +2400,6 @@ if (photosModal) {
 
 }
 
-
 if (photosForm) {
 
     photosForm.addEventListener(
@@ -2382,12 +2408,10 @@ if (photosForm) {
 
             event.preventDefault();
 
-
             const files =
                 Array.from(
                     albumPhotos.files
                 );
-
 
             if (!files.length) {
 
@@ -2399,13 +2423,46 @@ if (photosForm) {
 
             }
 
+            if (!currentAlbumId) {
+                return;
+            }
 
             try {
 
+                const startOrderResult =
+                    await supabaseClient
+                        .from("photos")
+                        .select(
+                            "sort_order",
+                            {
+                                count: "exact",
+                                head: false
+                            }
+                        )
+                        .eq(
+                            "album_id",
+                            currentAlbumId
+                        )
+                        .order(
+                            "sort_order",
+                            {
+                                ascending: false
+                            }
+                        )
+                        .limit(1);
+
+                const lastOrder =
+                    startOrderResult.data?.[0]?.sort_order ||
+                    0;
+
                 for (
-                    const file
-                    of files
+                    let index = 0;
+                    index < files.length;
+                    index++
                 ) {
+
+                    const file =
+                        files[index];
 
                     const data =
                         await compressImage(
@@ -2414,40 +2471,59 @@ if (photosForm) {
                             .78
                         );
 
+                    const photoId =
+                        crypto.randomUUID();
 
-                    await dbPut({
+                    const path =
+                        `albums/${currentAlbumId}/${photoId}.jpg`;
 
-                        id:
-                            crypto.randomUUID(),
-
-                        albumId:
-                            currentAlbumId,
-
+                    await uploadDataUrl(
                         data,
+                        path
+                    );
 
-                        isCover:
-                            false
+                    const { error } =
+                        await supabaseClient
+                            .from("photos")
+                            .insert({
+                                id: photoId,
+                                album_id:
+                                    currentAlbumId,
+                                storage_path:
+                                    path,
+                                file_name:
+                                    file.name,
+                                sort_order:
+                                    lastOrder + index + 1,
+                                created_by:
+                                    currentUser?.id || null
+                            });
 
-                    });
-
+                    if (error) {
+                        await removeStorageFile(
+                            path
+                        );
+                        throw error;
+                    }
                 }
-
 
                 photosModal.classList.add(
                     "hidden"
                 );
 
-
                 await renderAlbumPhotos();
-
                 await renderAlbums();
-
 
                 showToast(
                     `${files.length} foto(s) adicionada(s) ❤️`
                 );
 
-            } catch {
+            } catch (error) {
+
+                console.error(
+                    "Erro ao adicionar fotos:",
+                    error
+                );
 
                 showToast(
                     "Não foi possível adicionar as fotos."
@@ -2460,31 +2536,18 @@ if (photosForm) {
 
 }
 
-
-/* =========================================================
-   RENDER FOTOS DO ÁLBUM
-========================================================= */
-
 async function renderAlbumPhotos() {
 
     if (!currentAlbumId) {
         return;
     }
 
-
     const photos =
-        (
-            await dbGetAll()
-        )
-        .filter(
-            photo =>
-                photo.albumId ===
-                currentAlbumId
+        await getAlbumPhotos(
+            currentAlbumId
         );
 
-
     albumPhotoGrid.innerHTML = "";
-
 
     albumDetailCount.textContent =
         `${photos.length} ${
@@ -2492,7 +2555,6 @@ async function renderAlbumPhotos() {
                 ? "foto"
                 : "fotos"
         }`;
-
 
     if (!photos.length) {
 
@@ -2510,9 +2572,7 @@ async function renderAlbumPhotos() {
         `;
 
         return;
-
     }
-
 
     photos.forEach(
         function (photo, index) {
@@ -2522,18 +2582,15 @@ async function renderAlbumPhotos() {
                     "div"
                 );
 
-
             element.className =
                 "album-photo";
-
 
             element.innerHTML = `
 
                 <img
-                    src="${photo.data}"
+                    src="${photo.url}"
                     alt="Foto do nosso álbum"
                 >
-
 
                 <button
                     type="button"
@@ -2545,7 +2602,6 @@ async function renderAlbumPhotos() {
                 </button>
 
             `;
-
 
             element
                 .querySelector("img")
@@ -2561,7 +2617,6 @@ async function renderAlbumPhotos() {
                     }
                 );
 
-
             element
                 .querySelector(".photo-delete")
                 .addEventListener(
@@ -2569,7 +2624,6 @@ async function renderAlbumPhotos() {
                     async function (event) {
 
                         event.stopPropagation();
-
 
                         if (
                             !confirm(
@@ -2579,24 +2633,34 @@ async function renderAlbumPhotos() {
                             return;
                         }
 
+                        try {
 
-                        await dbDelete(
-                            photo.id
-                        );
+                            await deletePhotoRecord(
+                                photo
+                            );
 
+                            await renderAlbumPhotos();
+                            await renderAlbums();
 
-                        await renderAlbumPhotos();
+                            showToast(
+                                "Foto excluída."
+                            );
 
-                        await renderAlbums();
+                        } catch (error) {
 
+                            console.error(
+                                "Erro ao excluir foto:",
+                                error
+                            );
 
-                        showToast(
-                            "Foto excluída."
-                        );
+                            showToast(
+                                "Não foi possível excluir a foto."
+                            );
+
+                        }
 
                     }
                 );
-
 
             albumPhotoGrid.appendChild(
                 element
@@ -2607,48 +2671,36 @@ async function renderAlbumPhotos() {
 
 }
 
-
-/* =========================================================
-   EDITAR ÁLBUM
-========================================================= */
-
 if (editAlbumButton) {
 
     editAlbumButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const album =
-                getAlbum(
+                await getAlbum(
                     currentAlbumId
                 );
-
 
             if (!album) {
                 return;
             }
 
-
             editingAlbumId =
                 album.id;
-
 
             albumModalTitle.textContent =
                 "Editar álbum";
 
-
             albumName.value =
                 album.name;
-
 
             albumDescription.value =
                 album.description ||
                 "";
 
-
             albumCover.value =
                 "";
-
 
             albumModal.classList.remove(
                 "hidden"
@@ -2658,11 +2710,6 @@ if (editAlbumButton) {
     );
 
 }
-
-
-/* =========================================================
-   EXCLUIR ÁLBUM
-========================================================= */
 
 if (deleteAlbumButton) {
 
@@ -2674,17 +2721,14 @@ if (deleteAlbumButton) {
                 return;
             }
 
-
             const album =
-                getAlbum(
+                await getAlbum(
                     currentAlbumId
                 );
-
 
             if (!album) {
                 return;
             }
-
 
             if (
                 !confirm(
@@ -2694,50 +2738,80 @@ if (deleteAlbumButton) {
                 return;
             }
 
+            try {
 
-            await dbDeleteAlbum(
-                album.id
-            );
-
-
-            const albums =
-                getAlbums().filter(
-                    item =>
-                        item.id !==
+                const photos =
+                    await getAlbumPhotos(
                         album.id
+                    );
+
+                for (
+                    const photo
+                    of photos
+                ) {
+                    await removeStorageFile(
+                        photo.storage_path
+                    );
+                }
+
+                if (album.cover_path) {
+                    await removeStorageFile(
+                        album.cover_path
+                    );
+                }
+
+                const { error } =
+                    await supabaseClient
+                        .from("albums")
+                        .delete()
+                        .eq(
+                            "id",
+                            album.id
+                        );
+
+                if (error) {
+                    throw error;
+                }
+
+                currentAlbumId =
+                    null;
+
+                albumDetail.classList.add(
+                    "hidden"
                 );
 
+                albumsView.classList.remove(
+                    "hidden"
+                );
 
-            saveAlbums(
-                albums
-            );
+                await renderAlbums();
 
+                showToast(
+                    "Álbum excluído."
+                );
 
-            currentAlbumId =
-                null;
+            } catch (error) {
 
+                console.error(
+                    "Erro ao excluir álbum:",
+                    error
+                );
 
-            albumDetail.classList.add(
-                "hidden"
-            );
+                showToast(
+                    "Não foi possível excluir o álbum."
+                );
 
-            albumsView.classList.remove(
-                "hidden"
-            );
-
-
-            await renderAlbums();
-
-
-            showToast(
-                "Álbum excluído."
-            );
+            }
 
         }
     );
 
 }
 
+
+/* =========================================================
+   FIM DOS ÁLBUNS
+=========================================================
 
 /* =========================================================
    LIGHTBOX
@@ -2781,7 +2855,7 @@ function updateLightbox() {
 
 
     lightboxImage.src =
-        photo.data;
+        photo.url || photo.data;
 
 
     lightboxCounter.textContent =
@@ -2933,98 +3007,104 @@ document.addEventListener(
    DATAS
 ========================================================= */
 
-function getDates() {
+async function getDates() {
 
-    try {
+    const { data, error } =
+        await supabaseClient
+            .from("special_dates")
+            .select("*")
+            .order(
+                "event_date",
+                {
+                    ascending: false
+                }
+            );
 
-        return JSON.parse(
-            localStorage.getItem(
-                "coupleDates"
-            )
-        ) || [];
-
-    } catch {
-
+    if (error) {
+        console.error(
+            "Erro ao carregar datas:",
+            error
+        );
         return [];
-
     }
 
+    return data || [];
 }
-
-
-function saveDates(
-    dates
-) {
-
-    localStorage.setItem(
-        "coupleDates",
-        JSON.stringify(
-            dates
-        )
-    );
-
-}
-
 
 if (addDateButton) {
 
     addDateButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const title =
                 prompt(
                     "Qual é o nome desta data?"
                 );
 
-
             if (!title) {
                 return;
             }
-
 
             const date =
                 prompt(
                     "Digite a data no formato DD/MM/AAAA:"
                 );
 
-
             if (!date) {
                 return;
             }
 
+            const parts =
+                date.split("/");
+
+            if (
+                parts.length !== 3 ||
+                parts[0].length !== 2 ||
+                parts[1].length !== 2 ||
+                parts[2].length !== 4
+            ) {
+                showToast(
+                    "Use o formato DD/MM/AAAA."
+                );
+                return;
+            }
 
             const description =
                 prompt(
                     "Quer adicionar uma pequena descrição?"
                 ) || "";
 
+            const eventDate =
+                `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-            const dates =
-                getDates();
+            const { error } =
+                await supabaseClient
+                    .from("special_dates")
+                    .insert({
+                        title,
+                        event_date:
+                            eventDate,
+                        description,
+                        created_by:
+                            currentUser?.id || null
+                    });
 
+            if (error) {
 
-            dates.push({
+                console.error(
+                    "Erro ao salvar data:",
+                    error
+                );
 
-                id:
-                    Date.now(),
+                showToast(
+                    "Não foi possível salvar a data."
+                );
 
-                title,
+                return;
+            }
 
-                date,
-
-                description
-
-            });
-
-
-            saveDates(
-                dates
-            );
-
-
-            renderDates();
-
+            await renderDates();
 
             showToast(
                 "Data adicionada ❤️"
@@ -3035,20 +3115,16 @@ if (addDateButton) {
 
 }
 
-
-function renderDates() {
+async function renderDates() {
 
     if (!datesList) {
         return;
     }
 
-
     const dates =
-        getDates();
-
+        await getDates();
 
     datesList.innerHTML = "";
-
 
     if (!dates.length) {
 
@@ -3066,101 +3142,93 @@ function renderDates() {
         `;
 
         return;
-
     }
 
+    dates.forEach(
+        function (item) {
 
-    dates
-        .slice()
-        .reverse()
-        .forEach(
-            function (item) {
-
-                const element =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                element.className =
-                    "date-item";
-
-
-                element.innerHTML = `
-
-                    <div class="date-day">
-                        ${escapeHTML(
-                            item.date
-                        )}
-                    </div>
-
-
-                    <div class="date-info">
-
-                        <h3>
-                            ${escapeHTML(
-                                item.title
-                            )}
-                        </h3>
-
-                        ${
-                            item.description
-                                ? `
-                                    <p>
-                                        ${escapeHTML(
-                                            item.description
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-
-                    <button
-                        class="date-delete"
-                        data-id="${item.id}"
-                        type="button"
-                    >
-                        excluir
-                    </button>
-
-                `;
-
-
-                datesList.appendChild(
-                    element
+            const element =
+                document.createElement(
+                    "div"
                 );
 
-            }
-        );
+            element.className =
+                "date-item";
+
+            const displayDate =
+                item.event_date
+                    ? item.event_date
+                        .split("-")
+                        .reverse()
+                        .join("/")
+                    : "";
+
+            element.innerHTML = `
+
+                <div class="date-day">
+                    ${escapeHTML(
+                        displayDate
+                    )}
+                </div>
+
+                <div class="date-info">
+
+                    <h3>
+                        ${escapeHTML(
+                            item.title
+                        )}
+                    </h3>
+
+                    ${
+                        item.description
+                            ? `
+                                <p>
+                                    ${escapeHTML(
+                                        item.description
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+                <button
+                    class="date-delete"
+                    data-id="${item.id}"
+                    type="button"
+                >
+                    excluir
+                </button>
+
+            `;
+
+            datesList.appendChild(
+                element
+            );
+
+        }
+    );
 
 }
-
 
 if (datesList) {
 
     datesList.addEventListener(
         "click",
-        function (event) {
+        async function (event) {
 
             const button =
                 event.target.closest(
                     ".date-delete"
                 );
 
-
             if (!button) {
                 return;
             }
 
-
             const id =
-                Number(
-                    button.dataset.id
-                );
-
+                button.dataset.id;
 
             if (
                 !confirm(
@@ -3170,16 +3238,30 @@ if (datesList) {
                 return;
             }
 
+            const { error } =
+                await supabaseClient
+                    .from("special_dates")
+                    .delete()
+                    .eq(
+                        "id",
+                        id
+                    );
 
-            saveDates(
-                getDates().filter(
-                    item =>
-                        item.id !== id
-                )
-            );
+            if (error) {
 
+                console.error(
+                    "Erro ao excluir data:",
+                    error
+                );
 
-            renderDates();
+                showToast(
+                    "Não foi possível excluir a data."
+                );
+
+                return;
+            }
+
+            await renderDates();
 
             showToast(
                 "Data excluída."
@@ -3195,94 +3277,80 @@ if (datesList) {
    CARTAS
 ========================================================= */
 
-function getLetters() {
+async function getLetters() {
 
-    try {
+    const { data, error } =
+        await supabaseClient
+            .from("letters")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
 
-        return JSON.parse(
-            localStorage.getItem(
-                "coupleLetters"
-            )
-        ) || [];
-
-    } catch {
-
+    if (error) {
+        console.error(
+            "Erro ao carregar cartas:",
+            error
+        );
         return [];
-
     }
 
+    return data || [];
 }
-
-
-function saveLetters(
-    letters
-) {
-
-    localStorage.setItem(
-        "coupleLetters",
-        JSON.stringify(
-            letters
-        )
-    );
-
-}
-
 
 if (addLetterButton) {
 
     addLetterButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const title =
                 prompt(
                     "Qual será o título da carta?"
                 );
 
-
             if (!title) {
                 return;
             }
-
 
             const text =
                 prompt(
                     "Escreva sua carta:"
                 );
 
-
             if (!text) {
                 return;
             }
 
+            const { error } =
+                await supabaseClient
+                    .from("letters")
+                    .insert({
+                        title,
+                        content:
+                            text,
+                        created_by:
+                            currentUser?.id || null
+                    });
 
-            const letters =
-                getLetters();
+            if (error) {
 
+                console.error(
+                    "Erro ao salvar carta:",
+                    error
+                );
 
-            letters.push({
+                showToast(
+                    "Não foi possível guardar a carta."
+                );
 
-                id:
-                    Date.now(),
+                return;
+            }
 
-                title,
-
-                text,
-
-                date:
-                    new Date()
-                        .toISOString()
-
-            });
-
-
-            saveLetters(
-                letters
-            );
-
-
-            renderLetters();
-
+            await renderLetters();
 
             showToast(
                 "Carta guardada ❤️"
@@ -3293,20 +3361,16 @@ if (addLetterButton) {
 
 }
 
-
-function renderLetters() {
+async function renderLetters() {
 
     if (!lettersList) {
         return;
     }
 
-
     const letters =
-        getLetters();
-
+        await getLetters();
 
     lettersList.innerHTML = "";
-
 
     if (!letters.length) {
 
@@ -3323,99 +3387,82 @@ function renderLetters() {
         `;
 
         return;
-
     }
 
+    letters.forEach(
+        function (letter) {
 
-    letters
-        .slice()
-        .reverse()
-        .forEach(
-            function (letter) {
-
-                const element =
-                    document.createElement(
-                        "article"
-                    );
-
-
-                element.className =
-                    "letter-card";
-
-
-                element.innerHTML = `
-
-                    <div
-                        class="letter-card-date"
-                    >
-                        ${formatDateTime(
-                            letter.date
-                        )}
-                    </div>
-
-
-                    <h3>
-                        ${escapeHTML(
-                            letter.title
-                        )}
-                    </h3>
-
-
-                    <p>
-                        ${escapeHTML(
-                            letter.text
-                        )}
-                    </p>
-
-
-                    <div
-                        class="letter-actions"
-                    >
-
-                        <button
-                            type="button"
-                            data-id="${letter.id}"
-                        >
-                            excluir
-                        </button>
-
-                    </div>
-
-                `;
-
-
-                lettersList.appendChild(
-                    element
+            const element =
+                document.createElement(
+                    "article"
                 );
 
-            }
-        );
+            element.className =
+                "letter-card";
+
+            element.innerHTML = `
+
+                <div
+                    class="letter-card-date"
+                >
+                    ${formatDateTime(
+                        letter.created_at
+                    )}
+                </div>
+
+                <h3>
+                    ${escapeHTML(
+                        letter.title
+                    )}
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                        letter.content
+                    )}
+                </p>
+
+                <div
+                    class="letter-actions"
+                >
+
+                    <button
+                        type="button"
+                        data-id="${letter.id}"
+                    >
+                        excluir
+                    </button>
+
+                </div>
+
+            `;
+
+            lettersList.appendChild(
+                element
+            );
+
+        }
+    );
 
 }
-
 
 if (lettersList) {
 
     lettersList.addEventListener(
         "click",
-        function (event) {
+        async function (event) {
 
             const button =
                 event.target.closest(
                     ".letter-actions button"
                 );
 
-
             if (!button) {
                 return;
             }
 
-
             const id =
-                Number(
-                    button.dataset.id
-                );
-
+                button.dataset.id;
 
             if (
                 !confirm(
@@ -3425,17 +3472,30 @@ if (lettersList) {
                 return;
             }
 
+            const { error } =
+                await supabaseClient
+                    .from("letters")
+                    .delete()
+                    .eq(
+                        "id",
+                        id
+                    );
 
-            saveLetters(
-                getLetters().filter(
-                    letter =>
-                        letter.id !== id
-                )
-            );
+            if (error) {
 
+                console.error(
+                    "Erro ao excluir carta:",
+                    error
+                );
 
-            renderLetters();
+                showToast(
+                    "Não foi possível excluir a carta."
+                );
 
+                return;
+            }
+
+            await renderLetters();
 
             showToast(
                 "Carta excluída."
@@ -3578,153 +3638,6 @@ function showToast(
         );
 
 }
-
-
-/* =========================================================
-   MIGRAÇÃO DOS MOMENTOS ANTIGOS
-========================================================= */
-
-/*
-   Se você já tinha momentos na versão anterior,
-   eles não são apagados.
-
-   Na primeira execução desta versão,
-   eles são transformados em um álbum chamado
-   "Momentos antigos".
-*/
-
-async function migrateOldMemories() {
-
-    const alreadyMigrated =
-        localStorage.getItem(
-            "oldMemoriesMigrated"
-        );
-
-
-    if (alreadyMigrated === "true") {
-        return;
-    }
-
-
-    let oldMemories = [];
-
-
-    try {
-
-        oldMemories =
-            JSON.parse(
-                localStorage.getItem(
-                    "coupleMemories"
-                )
-            ) || [];
-
-    } catch {
-
-        oldMemories = [];
-
-    }
-
-
-    if (!oldMemories.length) {
-
-        localStorage.setItem(
-            "oldMemoriesMigrated",
-            "true"
-        );
-
-        return;
-
-    }
-
-
-    const albums =
-        getAlbums();
-
-
-    const albumId =
-        crypto.randomUUID();
-
-
-    const album = {
-
-        id:
-            albumId,
-
-        name:
-            "Momentos antigos",
-
-        description:
-            "Lembranças que já faziam parte da nossa história.",
-
-        createdAt:
-            new Date()
-                .toISOString()
-
-    };
-
-
-    albums.push(
-        album
-    );
-
-
-    saveAlbums(
-        albums
-    );
-
-
-    for (
-        const memory
-        of oldMemories
-    ) {
-
-        if (!memory.photo) {
-            continue;
-        }
-
-
-        await dbPut({
-
-            id:
-                crypto.randomUUID(),
-
-            albumId,
-
-            data:
-                memory.photo,
-
-            isCover:
-                false
-
-        });
-
-    }
-
-
-    localStorage.setItem(
-        "oldMemoriesMigrated",
-        "true"
-    );
-
-}
-
-
-migrateOldMemories()
-    .then(
-        function () {
-
-            if (
-                !mainSite.classList.contains(
-                    "hidden"
-                )
-            ) {
-
-                renderAlbums();
-
-            }
-
-        }
-    );
 
 
 /* =========================================================
